@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1F3864">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Megatronlar Jangi</title>
+<style>
+html { -webkit-text-size-adjust: 100%; color-scheme: light; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+
+/* Layout: sticky bar with total + three views (Kiritish / Reyting / Post matni); station cards in two metro-line groups. */
+:root {
+  --bg: #F2F5F4;
+  --surface: #FFFFFF;
+  --surface2: #F6F8F7;
+  --fg: #14201C;
+  --muted: #5B6B65;
+  --border: #D5DDD9;
+  --accent: #1F3864;
+  --accent-fg: #FFFFFF;
+  --yun: #1E9B57;
+  --chil: #D13B3B;
+  --gold: #FFF2CC;
+  --silver: #ECEEF0;
+  --bronze: #F8E0CC;
+  --warn: #B42318;
+  --font-head: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101614;
+    --surface: #18201D;
+    --surface2: #1F2824;
+    --fg: #E8EFEC;
+    --muted: #93A39C;
+    --border: #2E3A35;
+    --accent: #8FA8E8;
+    --accent-fg: #0E1A33;
+    --yun: #46C984;
+    --chil: #F0716F;
+    --gold: #3B3418;
+    --silver: #2B3033;
+    --bronze: #3D2C1E;
+    --warn: #FF8A80;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101614;
+  --surface: #18201D;
+  --surface2: #1F2824;
+  --fg: #E8EFEC;
+  --muted: #93A39C;
+  --border: #2E3A35;
+  --accent: #8FA8E8;
+  --accent-fg: #0E1A33;
+  --yun: #46C984;
+  --chil: #F0716F;
+  --gold: #3B3418;
+  --silver: #2B3033;
+  --bronze: #3D2C1E;
+  --warn: #FF8A80;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--bg); z-index: 20; }
+* { box-sizing: border-box; }
+.wrap { max-width: 880px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 15; background: var(--bg); border-bottom: 1px solid var(--border); }
+.top .wrap { padding-block: 10px 10px; display: grid; gap: 10px; }
+.top-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.brand { min-width: 0; }
+h1 { margin: 0; font: 700 20px/1.15 var(--font-head); letter-spacing: -0.01em; }
+.meta { margin: 3px 0 0; font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: center; }
+.status { font: inherit; color: var(--muted); background: none; border: 0; padding: 0; text-align: left; cursor: default; }
+.status[data-kind="error"] { color: var(--warn); text-decoration: underline; cursor: pointer; }
+.status[data-kind="saved"]::before, .status[data-kind="pending"]::before, .status[data-kind="saving"]::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; background: var(--yun); }
+.status[data-kind="pending"]::before, .status[data-kind="saving"]::before { background: var(--muted); }
+.grand { text-align: right; flex: none; }
+.grand-num { display: block; font: 700 30px/1 var(--font-head); font-variant-numeric: tabular-nums; color: var(--accent); }
+.grand-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; }
+.tab { font: 600 13px var(--font-body); padding: 9px 6px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--accent-fg); }
+.tab:focus-visible, .btn:focus-visible, .status:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+main .wrap { padding-block: 16px 40px; display: grid; gap: 22px; }
+.note { margin: 0; padding: 10px 12px; border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); font-size: 13px; }
+.msg { padding: 28px 8px; text-align: center; color: var(--muted); }
+.skel { display: grid; gap: 10px; margin-top: 14px; }
+.skel i { display: block; height: 92px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); }
+
+h2.dir { margin: 0 0 10px; display: flex; align-items: center; gap: 8px; font: 600 15px var(--font-head); }
+h2.dir .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+h2.dir .dir-total { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 500; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px 14px; min-width: 0; }
+.card-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+.card-h h3 { margin: 0; font: 600 16px var(--font-head); }
+.card-total { font: 700 22px/1 var(--font-head); font-variant-numeric: tabular-nums; }
+.card-total small { font: 500 11px var(--font-body); color: var(--muted); margin-left: 3px; }
+.fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 8px; }
+.field { min-width: 0; }
+.field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.field input { width: 100%; height: 40px; font: 500 16px var(--font-body); text-align: center; color: var(--fg); background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; font-variant-numeric: tabular-nums; }
+.field input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+.calc { margin-top: 3px; font-size: 11px; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; opacity: 0.7; }
+.calc.on { color: var(--fg); opacity: 1; font-weight: 500; }
+.field.wide { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; }
+.field.wide label { margin: 0; width: 44px; font-size: 12px; font-weight: 600; color: var(--fg); }
+.field.wide input { flex: 1; min-width: 0; }
+.field.wide .calc { margin: 0; width: 76px; text-align: right; }
+
+details.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 0 14px; }
+details.panel summary { cursor: pointer; padding: 12px 0; font: 600 14px var(--font-head); display: flex; justify-content: space-between; gap: 8px; list-style: none; }
+details.panel summary::-webkit-details-marker { display: none; }
+details.panel summary span { font: 400 12px var(--font-body); color: var(--muted); }
+details.panel .fields { padding-bottom: 14px; }
+.panel-hint { margin: 0 0 12px; color: var(--muted); font-size: 12px; }
+
+.dirstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 10px; }
+.chip { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font-weight: 500; }
+.chip .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.chip b { margin-left: auto; font: 700 18px var(--font-head); font-variant-numeric: tabular-nums; }
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+table { border-collapse: collapse; width: 100%; min-width: 700px; font-variant-numeric: tabular-nums; }
+th, td { padding: 9px 8px; text-align: center; border-bottom: 1px solid var(--border); font-size: 13px; white-space: nowrap; background: var(--rowbg, var(--surface)); }
+th { --rowbg: var(--surface2); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); vertical-align: bottom; }
+th small { display: block; font-size: 10px; letter-spacing: 0; text-transform: none; font-weight: 500; }
+td.name, th.name { text-align: left; position: sticky; left: 0; z-index: 1; padding-left: 10px; }
+td.name { font-weight: 600; }
+.rk { display: inline-block; min-width: 22px; margin-right: 8px; color: var(--muted); font-weight: 500; text-align: right; }
+tr.r1 { --rowbg: var(--gold); } tr.r2 { --rowbg: var(--silver); } tr.r3 { --rowbg: var(--bronze); }
+tr.r1 .rk, tr.r2 .rk, tr.r3 .rk { color: var(--fg); font-weight: 700; }
+td.tot { font: 700 15px var(--font-head); }
+.dash { color: var(--muted); opacity: 0.6; }
+tfoot td { --rowbg: var(--surface2); font-weight: 700; border-bottom: 0; }
+.legend { margin: 0; font-size: 12px; color: var(--muted); }
+
+.post textarea { width: 100%; min-height: 320px; padding: 12px; font: 400 14px/1.5 var(--font-body); color: var(--fg); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; resize: vertical; white-space: pre; overflow-x: auto; }
+.post textarea:focus { outline: 2px solid var(--accent); border-color: transparent; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; }
+.btn { font: 600 14px var(--font-body); padding: 11px 16px; border-radius: 10px; border: 0; background: var(--accent); color: var(--accent-fg); cursor: pointer; }
+.hint { color: var(--muted); font-size: 12px; }
+@media (prefers-reduced-motion: no-preference) { .tab, .btn { transition: background-color .15s, color .15s; } }
+@media (min-width: 640px) { h1 { font-size: 24px; } .grand-num { font-size: 36px; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="top-row">
+      <div class="brand">
+        <h1>Megatronlar jangi</h1>
+        <p class="meta"><span id="updated"></span><button type="button" class="status" id="status" disabled></button></p>
+      </div>
+      <div class="grand"><span class="grand-num" id="grand">…</span><span class="grand-lbl">jami ball</span></div>
+    </div>
+    <div class="tabs" role="tablist" id="tabs" hidden>
+      <button type="button" class="tab" role="tab" data-v="input" aria-selected="true">Kiritish</button>
+      <button type="button" class="tab" role="tab" data-v="rank" aria-selected="false">Reyting</button>
+      <button type="button" class="tab" role="tab" data-v="post" aria-selected="false">Post matni</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section id="msg" class="msg" aria-live="polite">
+      Ma'lumotlar yuklanmoqda…
+      <div class="skel"><i></i><i></i><i></i></div>
+    </section>
+    <p class="note" id="emptynote" hidden>Hali ma'lumot kiritilmagan. Raqamlarni yozing, ballar va reyting o'zi hisoblanadi.</p>
+    <section id="v-input" hidden></section>
+    <section id="v-rank" hidden></section>
+    <section id="v-post" class="post" hidden></section>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var FIELDS = [
+    { k: 'apk',  label: 'APK' },
+    { k: 'r115', label: '115' },
+    { k: 'tig',  label: "Tig'" },
+    { k: 'til',  label: 'Tilanchi' },
+    { k: 'sav',  label: 'Savdo-sotiq' },
+    { k: 'qid',  label: 'Qidiruv' },
+    { k: 'prof', label: 'Prof suhbat' }
+  ];
+  var WLABEL = { apk: 'APK', r115: "115 (ma'muriy)", tig: "Tig' topgan", til: 'Tilanchi', sav: 'Savdo-sotiq', qid: 'Qidiruv ushlagan', prof: 'Prof suhbat' };
+  var DEFAULT_W = { apk: 1, r115: 10, tig: 5, til: 5, sav: 5, qid: 20, prof: 5 };
+
+  var DIRS = [
+    { id: 'yun',  name: "Yunusobod yo'nalishi", title: "YUNUSOBOD  YO'NALISHI", mark: '🟢', cssVar: '--yun' },
+    { id: 'chil', name: "Chilonzor yo'nalishi", title: "CHILONZOR  YO'NALISHI", mark: '🔴', cssVar: '--chil' }
+  ];
+  var STATIONS = [
+    { id: 'bodomzor', name: 'Bodomzor', dir: 'yun' },
+    { id: 'yunusobod', name: 'Yunusobod', dir: 'yun' },
+    { id: 'turkiston', name: 'Turkiston', dir: 'yun' },
+    { id: 'yunus_rajabiy', name: 'Yunus Rajabiy', dir: 'yun' },
+    { id: 'minor', name: 'Minor', dir: 'yun' },
+    { id: 'shaxriston', name: 'Shaxriston', dir: 'yun' },
+    { id: 'abdulla_qodiriy', name: 'Abdulla Qodiriy', dir: 'yun' },
+    { id: 'ming_orik', name: "Ming O'rik", dir: 'yun' },
+    { id: 'biy', name: 'B.I.Y', dir: 'chil' },
+    { id: 'mustaqillik', name: 'Mustaqillik', dir: 'chil' },
+    { id: 'h_olimjon', name: 'H.Olimjon', dir: 'chil' },
+    { id: 'a_temur', name: 'A.Temur', dir: 'chil' },
+    { id: 'pushkin', name: 'Pushkin', dir: 'chil' }
+  ];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+
+  function defaults() {
+    var s = { weights: {}, counts: {}, extras: { tez: 0, uchtepa: 0 }, updatedAt: '' };
+    FIELDS.forEach(function (f) { s.weights[f.k] = DEFAULT_W[f.k]; });
+    STATIONS.forEach(function (st) {
+      s.counts[st.id] = {};
+      FIELDS.forEach(function (f) { s.counts[st.id][f.k] = 0; });
+    });
+    return s;
+  }
+  function clampInt(v, max) {
+    var n = parseInt(v, 10);
+    if (!isFinite(n) || n < 0) return 0;
+    return Math.min(n, max || 99999);
+  }
+  function normalize(d) {
+    var s = defaults();
+    if (!d || typeof d !== 'object') return s;
+    if (d.weights) FIELDS.forEach(function (f) { if (d.weights[f.k] != null) s.weights[f.k] = clampInt(d.weights[f.k], 9999); });
+    if (d.counts) STATIONS.forEach(function (st) {
+      var c = d.counts[st.id];
+      if (c) FIELDS.forEach(function (f) { if (c[f.k] != null) s.counts[st.id][f.k] = clampInt(c[f.k]); });
+    });
+    if (d.extras) { s.extras.tez = clampInt(d.extras.tez); s.extras.uchtepa = clampInt(d.extras.uchtepa); }
+    if (typeof d.updatedAt === 'string') s.updatedAt = d.updatedAt;
+    return s;
+  }
+
+  var state = defaults();
+  var ref = null;          // db document reference, or null (local mode)
+  var loaded = false;
+  var built = false;
+  var saveTimer = null, saving = false, dirty = false;
+  var inputs = {}, calcs = {}, totals = {}, dirTotals = {}, wInputs = {}, extraInputs = {};
+  var LS_KEY = 'megatron-state-v1';
+
+  /* ---------- calculations ---------- */
+  function pts(sid, k) { return state.counts[sid][k] * state.weights[k]; }
+  function stTotal(sid) { return FIELDS.reduce(function (a, f) { return a + pts(sid, f.k); }, 0); }
+  function dirTotal(did) { return STATIONS.filter(function (s) { return s.dir === did; }).reduce(function (a, s) { return a + stTotal(s.id); }, 0); }
+  function grandTotal() { return STATIONS.reduce(function (a, s) { return a + stTotal(s.id); }, 0); }
+  function colCount(k) { return STATIONS.reduce(function (a, s) { return a + state.counts[s.id][k]; }, 0); }
+  function colPts(k) { return colCount(k) * state.weights[k]; }
+
+  function ranking() {
+    var rows = STATIONS.map(function (s, i) { return { s: s, i: i, t: stTotal(s.id) }; });
+    rows.sort(function (a, b) { return b.t - a.t || a.i - b.i; });
+    rows.forEach(function (r) { r.rank = 1 + rows.filter(function (x) { return x.t > r.t; }).length; });
+    return rows;
+  }
+
+  /* ---------- status + saving ---------- */
+  function setStatus(kind) {
+    var m = { idle: '', loading: 'Yuklanmoqda…', pending: 'Saqlanmoqda…', saving: 'Saqlanmoqda…', saved: 'Saqlandi', error: "Saqlanmadi. Qayta urinish", local: 'Telefonda saqlanadi' };
+    var el = $('status');
+    el.textContent = m[kind] || '';
+    el.dataset.kind = kind;
+    el.disabled = kind !== 'error';
+  }
+  function fmtDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return 'Yangilandi: ' + p(d.getDate()) + '.' + p(d.getMonth() + 1) + '.' + d.getFullYear() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  function scheduleSave() {
+    dirty = true;
+    setStatus(ref ? 'pending' : 'local');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(flush, 600);
+  }
+  function flush() {
+    saveTimer = null;
+    if (saving) { saveTimer = setTimeout(flush, 300); return; }
+    if (!dirty) return;
+    dirty = false;
+    saving = true;
+    var snap = JSON.parse(JSON.stringify(state));
+    var job;
+    if (ref) {
+      job = ref.set(snap);
+    } else {
+      job = new Promise(function (res) { try { localStorage.setItem(LS_KEY, JSON.stringify(snap)); } catch (e) {} res(); });
+    }
+    job.then(function () {
+      saving = false;
+      if (dirty) { if (!saveTimer) saveTimer = setTimeout(flush, 300); }
+      else setStatus(ref ? 'saved' : 'local');
+    }).catch(function () {
+      saving = false;
+      dirty = true;
+      setStatus('error');
+    });
+  }
+  $('status').addEventListener('click', function () { if (dirty && !saving) flush(); });
+
+  function touch() {
+    state.updatedAt = new Date().toISOString();
+    $('emptynote').hidden = true;
+    recompute();
+    scheduleSave();
+  }
+
+  /* ---------- number inputs ---------- */
+  function numInput(id, value, label, onNum) {
+    var i = document.createElement('input');
+    i.type = 'text';
+    i.inputMode = 'numeric';
+    i.pattern = '[0-9]*';
+    i.autocomplete = 'off';
+    i.maxLength = 5;
+    i.id = id;
+    i.value = String(value);
+    i.setAttribute('aria-label', label);
+    i.addEventListener('focus', function () { setTimeout(function () { try { i.select(); } catch (e) {} }, 0); });
+    i.addEventListener('input', function () {
+      var d = i.value.replace(/\D/g, '');
+      if (d !== '') d = String(parseInt(d, 10));
+      if (d !== i.value) i.value = d;
+      onNum(d === '' ? 0 : parseInt(d, 10));
+    });
+    i.addEventListener('blur', function () { if (i.value === '') i.value = '0'; });
+    i.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      var all = Array.prototype.slice.call($('v-input').querySelectorAll('input'));
+      var n = all[all.indexOf(i) + 1];
+      if (n) n.focus(); else i.blur();
+    });
+    return i;
+  }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function field(id, label, cls, input, calc) {
+    var f = el('div', 'field' + (cls ? ' ' + cls : ''));
+    var l = el('label', null, label);
+    l.htmlFor = id;
+    f.appendChild(l); f.appendChild(input);
+    if (calc) f.appendChild(calc);
+    return f;
+  }
+
+  /* ---------- build the entry form ---------- */
+  function buildForm() {
+    var root = $('v-input');
+    root.innerHTML = '';
+    root.style.display = 'grid';
+    root.style.gap = '22px';
+
+    // weights
+    var det = el('details', 'panel');
+    var sum = el('summary'); sum.appendChild(document.createTextNode("Ball qiymatlari")); sum.appendChild(el('span', null, 'o‘zgartirish uchun oching'));
+    det.appendChild(sum);
+    det.appendChild(el('p', 'panel-hint', "Har bir ko'rsatkichning 1 tasi necha ball bo'lishini shu yerda o'zgartirasiz. Hamma ballar qayta hisoblanadi."));
+    var wf = el('div', 'fields');
+    FIELDS.forEach(function (f) {
+      var id = 'w-' + f.k;
+      var inp = numInput(id, state.weights[f.k], WLABEL[f.k] + ' balli', function (n) { state.weights[f.k] = n; touch(); });
+      wInputs[f.k] = inp;
+      wf.appendChild(field(id, WLABEL[f.k], '', inp));
+    });
+    det.appendChild(wf);
+    root.appendChild(det);
+
+    // directions
+    DIRS.forEach(function (d) {
+      var sec = el('div');
+      var h = el('h2', 'dir');
+      var dot = el('span', 'dot'); dot.style.background = 'var(' + d.cssVar + ')';
+      h.appendChild(dot); h.appendChild(document.createTextNode(d.name));
+      var dt = el('span', 'dir-total', '0 ball');
+      dirTotals[d.id] = dt;
+      h.appendChild(dt);
+      sec.appendChild(h);
+      var grid = el('div', 'cards');
+      STATIONS.filter(function (s) { return s.dir === d.id; }).forEach(function (s) {
+        var card = el('div', 'card');
+        var ch = el('div', 'card-h');
+        ch.appendChild(el('h3', null, s.name));
+        var tot = el('div', 'card-total', '0');
+        tot.appendChild(el('small', null, 'ball'));
+        totals[s.id] = tot;
+        ch.appendChild(tot);
+        card.appendChild(ch);
+        var fg = el('div', 'fields');
+        inputs[s.id] = {}; calcs[s.id] = {};
+        FIELDS.forEach(function (f) {
+          var id = 'c-' + s.id + '-' + f.k;
+          var inp = numInput(id, state.counts[s.id][f.k], s.name + ': ' + f.label, function (n) { state.counts[s.id][f.k] = n; touch(); });
+          var calc = el('div', 'calc');
+          inputs[s.id][f.k] = inp; calcs[s.id][f.k] = calc;
+          fg.appendChild(field(id, f.label, f.k === 'apk' ? 'wide' : '', inp, calc));
+        });
+        card.appendChild(fg);
+        grid.appendChild(card);
+      });
+      sec.appendChild(grid);
+      root.appendChild(sec);
+    });
+
+    // extras (no points)
+    var ex = el('div', 'card');
+    var eh = el('div', 'card-h'); eh.appendChild(el('h3', null, "Ballga kirmaydigan ko'rsatkichlar"));
+    ex.appendChild(eh);
+    var ef = el('div', 'fields');
+    ef.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+    [['tez', 'Tez yordam'], ['uchtepa', 'Uchtepa tumani tadbiri']].forEach(function (p) {
+      var id = 'x-' + p[0];
+      var inp = numInput(id, state.extras[p[0]], p[1], function (n) { state.extras[p[0]] = n; touch(); });
+      extraInputs[p[0]] = inp;
+      ef.appendChild(field(id, p[1], '', inp));
+    });
+    ex.appendChild(ef);
+    ex.appendChild(el('p', 'panel-hint', "Bu ikkitasi faqat post matnidagi statistikaga chiqadi."));
+    ex.lastChild.style.margin = '12px 0 0';
+    root.appendChild(ex);
+    built = true;
+  }
+
+  function syncInputs() {
+    if (!built) return;
+    STATIONS.forEach(function (s) {
+      FIELDS.forEach(function (f) { var i = inputs[s.id][f.k]; if (document.activeElement !== i) i.value = String(state.counts[s.id][f.k]); });
+    });
+    FIELDS.forEach(function (f) { var i = wInputs[f.k]; if (document.activeElement !== i) i.value = String(state.weights[f.k]); });
+    ['tez', 'uchtepa'].forEach(function (k) { var i = extraInputs[k]; if (document.activeElement !== i) i.value = String(state.extras[k]); });
+  }
+
+  function recompute() {
+    if (built) {
+      STATIONS.forEach(function (s) {
+        FIELDS.forEach(function (f) {
+          var c = state.counts[s.id][f.k], w = state.weights[f.k], p = c * w, node = calcs[s.id][f.k];
+          node.textContent = '×' + w + ' = ' + p;
+          node.className = 'calc' + (p > 0 ? ' on' : '');
+        });
+        var t = totals[s.id];
+        t.firstChild.nodeValue = String(stTotal(s.id));
+      });
+      DIRS.forEach(function (d) { dirTotals[d.id].textContent = dirTotal(d.id) + ' ball'; });
+    }
+    $('grand').textContent = String(grandTotal());
+    $('updated').textContent = fmtDate(state.updatedAt);
+    if (!$('v-rank').hidden) renderRanking();
+  }
+
+  /* ---------- ranking view ---------- */
+  function renderRanking() {
+    var rows = ranking(), W = state.weights;
+    var h = '<div class="dirstats">' + DIRS.map(function (d) {
+      return '<div class="chip"><span class="dot" style="background:var(' + d.cssVar + ')"></span>' + esc(d.name) + '<b>' + dirTotal(d.id) + '</b></div>';
+    }).join('') + '</div>';
+    h += '<div class="tablewrap" style="margin-top:14px"><table><thead><tr><th class="name">Bekat</th>' +
+      FIELDS.map(function (f) { return '<th>' + esc(f.label) + '<small>×' + W[f.k] + '</small></th>'; }).join('') +
+      '<th>Jami</th></tr></thead><tbody>';
+    rows.forEach(function (r) {
+      var cls = r.rank <= 3 ? 'r' + r.rank : '';
+      h += '<tr class="' + cls + '"><td class="name"><span class="rk">' + r.rank + '</span>' + esc(r.s.name) + '</td>';
+      FIELDS.forEach(function (f) {
+        var c = state.counts[r.s.id][f.k];
+        h += '<td>' + (c ? (f.k === 'apk' && W.apk === 1 ? c : c + '×' + W[f.k] + '=' + (c * W[f.k])) : '<span class="dash">-</span>') + '</td>';
+      });
+      h += '<td class="tot">' + r.t + '</td></tr>';
+    });
+    h += '</tbody><tfoot><tr><td class="name">JAMI</td>' + FIELDS.map(function (f) { return '<td>' + colPts(f.k) + '</td>'; }).join('') + '<td>' + grandTotal() + '</td></tr></tfoot></table></div>';
+    h += '<p class="legend" style="margin-top:12px">Ball = soni × qiymati. Tenglashgan bekatlar bir xil o‘rin oladi.</p>';
+    $('v-rank').innerHTML = h;
+  }
+
+  /* ---------- post text ---------- */
+  var POLICE = '👮‍♂️';
+  function buildPost() {
+    var W = state.weights, L = [];
+    L.push('🔥🔥🔥🔥✨✨🔥🔥🔥🔥');
+    L.push('  🤖MEGATRONLAR  JANGI💀');
+    L.push('');
+    DIRS.forEach(function (d, di) {
+      L.push('🧙' + d.title);
+      STATIONS.filter(function (s) { return s.dir === d.id; }).forEach(function (s) {
+        var c = state.counts[s.id];
+        L.push(d.mark + s.name + ' +' + c.apk);
+        if (c.r115) L.push('📝(115- ' + c.r115 + 'ta)');
+        if (c.tig) L.push("🍴(Tig'- " + c.tig + 'ta)');
+        if (c.til) L.push('🎸(Tilanchi - ' + c.til + 'ta)');
+        if (c.sav) L.push('🤨(Savdo-sotiq- ' + c.sav + 'ta)');
+        if (c.qid) L.push('📸(Qidiruv- ' + c.qid + 'ta)');
+        if (c.prof) L.push(POLICE + '(Filtr-Prof suxbat-' + c.prof + 'ta)');
+      });
+      L.push('');
+      if (di === 0) { L.push('🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩'); }
+    });
+    L.push('🔥🔥🔥🔥✨✨🔥🔥🔥🔥');
+    L.push('               ❗️⭕️⭕️⭕️❗️');
+    L.push('⚡️⚡️⚡️⚡️⚡️⚡️⚡️⚡️⚡️⚡️');
+    L.push('⚠️1ta Apk ➕ ' + W.apk + ' ball');
+    L.push('⚠️1ta Tilamchi ➕ ' + W.til + ' ball');
+    L.push("⚠️1ta Tig' topgan ➕" + W.tig + ' ball');
+    L.push('⚠️1ta Savdo-sotiq ➕ ' + W.sav + ' ball');
+    L.push('⚠️1ta Prof suhbat ➕ ' + W.prof + ' ball');
+    L.push("⚠️1ta 115-Ma'muriy ➕" + W.r115 + ' ball');
+    L.push('⚠️1ta Qidiruv ushagan➕' + W.qid + ' ball');
+    L.push('⚡️⚡️⚡️⚡️⚡️⚡️⚡️⚡️⚡️⚡️');
+    L.push('');
+    L.push('📈Statistika 😕Jami: ');
+    L.push('');
+    L.push('🔐APK -' + colCount('apk') + 'ta');
+    L.push('🇺🇿115 -' + colCount('r115') + 'ta');
+    L.push("🍴Tig'- " + colCount('tig') + 'ta');
+    L.push('🎸Tilanchi - ' + colCount('til') + 'ta');
+    L.push('😴Savdo-sotiq- ' + colCount('sav') + 'ta');
+    L.push('🚑Tez yordam- ' + (state.extras.tez ? state.extras.tez + 'ta' : ''));
+    L.push('📸Qidiruv- ' + colCount('qid') + 'ta');
+    L.push(POLICE + 'Filtr-Prof suxbat- ' + colCount('prof') + 'ta');
+    if (state.extras.uchtepa) L.push('🏬Uchtepa tumani tadbir-' + state.extras.uchtepa + 'ta');
+    L.push('');
+    L.push('Yangilandi✅');
+    return L.join('\n');
+  }
+  function renderPost() {
+    var root = $('v-post');
+    if (!root.firstChild) {
+      var ta = el('textarea'); ta.id = 'post-text'; ta.spellcheck = false; ta.setAttribute('aria-label', 'Post matni');
+      root.appendChild(ta);
+      var row = el('div', 'row');
+      var btn = el('button', 'btn', 'Matnni nusxalash'); btn.type = 'button'; btn.id = 'copy-btn';
+      var hint = el('span', 'hint', "Matnni shu yerning o'zida tahrirlash ham mumkin."); hint.id = 'copy-hint';
+      row.appendChild(btn); row.appendChild(hint);
+      root.appendChild(row);
+      btn.addEventListener('click', function () {
+        var t = $('post-text');
+        var done = function () { btn.textContent = 'Nusxalandi'; setTimeout(function () { btn.textContent = 'Matnni nusxalash'; }, 1800); };
+        var fallback = function () {
+          t.focus(); t.select();
+          var ok = false;
+          try { ok = document.execCommand('copy'); } catch (e) {}
+          if (ok) done(); else $('copy-hint').textContent = "Matn belgilandi. Uni qo'lda nusxalang.";
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t.value).then(done, fallback);
+        else fallback();
+      });
+    }
+    var area = $('post-text');
+    area.value = buildPost();
+    area.style.height = 'auto';
+    area.style.height = Math.min(area.scrollHeight + 4, 900) + 'px';
+  }
+
+  /* ---------- tabs ---------- */
+  function showView(v) {
+    ['input', 'rank', 'post'].forEach(function (k) { $('v-' + k).hidden = (k !== v); });
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) { b.setAttribute('aria-selected', b.dataset.v === v ? 'true' : 'false'); });
+    if (v === 'rank') renderRanking();
+    if (v === 'post') renderPost();
+    window.scrollTo(0, 0);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) {
+    b.addEventListener('click', function () { showView(b.dataset.v); });
+  });
+
+  /* ---------- boot ---------- */
+  function showApp(isEmpty) {
+    loaded = true;
+    $('msg').hidden = true;
+    $('tabs').hidden = false;
+    if (!built) buildForm();
+    showView('input');
+    recompute();
+    $('emptynote').hidden = !isEmpty;
+    setStatus(ref ? (isEmpty ? 'idle' : 'saved') : 'local');
+  }
+  function showProblem(text) {
+    if (loaded) return;
+    $('msg').hidden = false;
+    $('msg').textContent = text;
+  }
+
+  function startLocal() {
+    ref = null;
+    var found = false;
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      if (raw) { state = normalize(JSON.parse(raw)); found = true; }
+    } catch (e) {}
+    showApp(!found);
+  }
+
+  function startDb(db) {
+    ref = db.doc('megatron/state');
+    var timer = setTimeout(function () {
+      showProblem("Ma'lumotlarga hozircha ulanib bo'lmadi. Internetni tekshiring. Ulanganda ma'lumotlar o'zi chiqadi.");
+    }, 10000);
+    ref.onSnapshot(function (snap) {
+      clearTimeout(timer);
+      if (!loaded) {
+        if (snap.exists) state = normalize(snap.data());
+        showApp(!snap.exists);
+        return;
+      }
+      if (saveTimer || saving || dirty) return;       // own edits in flight
+      if (snap.metadata && snap.metadata.hasPendingWrites) return;
+      if (!snap.exists) return;
+      var next = normalize(snap.data());
+      if (JSON.stringify(next) !== JSON.stringify(state)) {
+        state = next;
+        syncInputs();
+        recompute();
+      }
+    }, function () {
+      clearTimeout(timer);
+      if (!loaded) showProblem("Ma'lumotlarni ochib bo'lmadi. Sahifani qayta oching.");
+    });
+  }
+
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
+  startLocal();
+})();
+</script>
+</body>
+</html>
